@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# -*- coding: utf-8 -*-
 """
 
 Other desireable things:
@@ -9,8 +9,13 @@ Other desireable things:
 - merge the item1.BLAH varients into the main fields when possible
     - seen TEL, ADR and URL there and not sure why
 
-
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+
 import argparse
 import codecs
 import collections
