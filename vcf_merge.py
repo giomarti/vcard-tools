@@ -42,7 +42,7 @@ def VcardFieldsEqual(field1, field2):
         return False
 
 
-def VcardMergeFields(field1, field2):
+def VcardMergeListFields(field1, field2):
     """Handle merging list fields that may include some overlap."""
     field_dict = {}
     for f in field1 + field2:
@@ -50,7 +50,26 @@ def VcardMergeFields(field1, field2):
     return list(field_dict.values())
 
 
+def SetVcardField(new_vcard, field_name, values):
+    """Set vCard field values and parameters on a new vCard."""
+    for val in values:
+        new_field = new_vcard.add(field_name)
+        new_field.value = val.value
+        if val.params:
+            new_field.params = val.params
+    return new_vcard
+
+
+def CopyVcardFields(new_vcard, auth_vcard, field_names):
+    """Copy vCard field values from an authoritative vCard into a new one."""
+    for field in field_names:
+        value_list = auth_vcard.contents.get(field)
+        new_vcard = SetVcardField(new_vcard, field, value_list)
+    return new_vcard
+
+
 def MergeVcards(vcard1, vcard2):
+    """Create a new vCard and populate it."""
     new_vcard = vobject.vCard()
     vcard1_fields = set(vcard1.contents.keys())
     vcard2_fields = set(vcard2.contents.keys())
@@ -69,7 +88,7 @@ def MergeVcards(vcard1, vcard2):
                                                     val1,
                                                     val2))
             else:
-                new_values.extend(VcardMergeFields(val1, val2))
+                new_values.extend(VcardMergeListFields(val1, val2))
         else:
             new_values.extend(val1)
 
@@ -77,21 +96,14 @@ def MergeVcards(vcard1, vcard2):
             field.upper(),
             new_values)
         )
-        for new_val in new_values:
-            new_field = new_vcard.add(field)
-            new_field.value = new_val.value
-            if new_val.params:
-                new_field.params = new_val.params
+        new_vcard = SetVcardField(new_vcard, field, new_values)
 
-    for field in vcard1_fields.difference(vcard2_fields):
-        val = getattr(vcard1, field).value
-        new_field = new_vcard.add(field)
-        new_field.value = val
-
-    for field in vcard2_fields.difference(vcard1_fields):
-        val = getattr(vcard2, field).value
-        new_field = new_vcard.add(field)
-        new_field.value = val
+    new_vcard = CopyVcardFields(new_vcard,
+                                vcard1,
+                                vcard1_fields - vcard2_fields)
+    new_vcard = CopyVcardFields(new_vcard,
+                                vcard2,
+                                vcard2_fields - vcard1_fields)
 
     return new_vcard
 
