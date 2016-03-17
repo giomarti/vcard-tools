@@ -40,8 +40,8 @@ setup(
     entry_points = {
         'console_scripts': [
             'vcardtool = vcardtools.vcardtool:main',
-            'vcf_merge = vcardtools.vcf_merge:main',
-            'vcf_splitter = vcardtools.vcf_splitter:main',
+            'vcf_merge = vcardtools.vcf_merge:dispatch_main',
+            'vcf_splitter = vcardtools.vcf_splitter:dispatch_main',
         ],
     },
     install_requires = ['argparse', 'six', 'vobject']

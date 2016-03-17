@@ -169,12 +169,18 @@ def AddArguments(parser):
                         help='Write merged vCard to file')
 
 
-def main(args):
-    with codecs.open(args.vcard_files[0], 'r', encoding='utf-8') as f:
-        vcard1_raw = f.read()
+def main(args, usage=''):
+    try:
+        with codecs.open(args.vcard_files[0], 'r', encoding='utf-8') as f:
+            vcard1_raw = f.read()
 
-    with codecs.open(args.vcard_files[1], 'r', encoding='utf-8') as f:
-        vcard2_raw = f.read()
+        with codecs.open(args.vcard_files[1], 'r', encoding='utf-8') as f:
+            vcard2_raw = f.read()
+    except OSError:
+        print('\nERROR: Check that all files specified exist and permissions'
+              ' are OK.\n')
+        print(usage)
+        sys.exit(1)
 
     vcard1 = vobject.readOne(vcard1_raw)
     vcard2 = vobject.readOne(vcard2_raw)
@@ -186,8 +192,12 @@ def main(args):
     args.outfile.write(u(merged_vcard.serialize()))
 
 
-if __name__ == '__main__':
+def dispatch_main():
     parser = argparse.ArgumentParser(prog='vcf_merge')
     AddArguments(parser)
     args = parser.parse_args(sys.argv[1:])
-    main(args)
+    main(args, usage=parser.format_usage())
+
+
+if __name__ == '__main__':
+    dispatch_main()

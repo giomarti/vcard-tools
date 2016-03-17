@@ -31,7 +31,7 @@ def main():
 
     args = parser.parse_args(sys.argv[1:])
     try:
-        args.func(args)
+        args.func(args, usage=parser.format_help())
     except AttributeError:
         parser.print_usage()
         sys.exit(1)

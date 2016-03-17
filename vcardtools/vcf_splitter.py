@@ -166,9 +166,15 @@ def AddArguments(parser):
                         help='Write output files in provided directory')
 
 
-def main(args):
-    with codecs.open(args.vcard_file[0], 'r', encoding='utf-8') as f:
-        content = f.read()
+def main(args, usage=''):
+    try:
+        with codecs.open(args.vcard_file[0], 'r', encoding='utf-8') as f:
+            content = f.read()
+    except OSError:
+        print('\nERROR: Check that all files specified exist and permissions'
+              ' are OK.\n')
+        print(usage)
+        sys.exit(1)
 
     new_files = collections.defaultdict(list)
     for vcard in GetVcardsFromString(content):
@@ -198,8 +204,12 @@ def main(args):
             WriteVcard(vcard_path, v[0])
 
 
-if __name__ == '__main__':
+def dispatch_main():
     parser = argparse.ArgumentParser(prog='vcf_splitter')
     AddArguments(parser)
     args = parser.parse_args(sys.argv[1:])
     main(args)
+
+
+if __name__ == '__main__':
+    dispatch_main()
