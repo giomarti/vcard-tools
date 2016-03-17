@@ -1,7 +1,7 @@
 """setuptools based setup module"""
 
 import codecs
-import os
+from os import path
 from setuptools import find_packages, setup
 
 
@@ -27,6 +27,7 @@ setup(
         'Intended Audience :: End Users/Desktop',
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: POSIX',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Topic :: Communications :: Email :: Address Book',
@@ -43,5 +44,5 @@ setup(
             'vcf_splitter = vcardtools.vcf_splitter:main',
         ],
     },
-    install_requires = ['argparse', 'vobject']
+    install_requires = ['argparse', 'six', 'vobject']
 )

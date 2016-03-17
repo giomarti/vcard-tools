@@ -13,6 +13,8 @@ import pprint
 import sys
 
 import vobject
+from six import u
+from six.moves import input
 
 
 logger = logging.getLogger(__name__)
@@ -94,7 +96,7 @@ def MergeVcards(vcard1, vcard2):
 
         logger.debug('Merged values for field {}: {}'.format(
             field.upper(),
-            new_values)
+            u(str(new_values)))
         )
         new_vcard = SetVcardField(new_vcard, field, new_values)
 
@@ -133,7 +135,7 @@ def SelectFieldPrompt(field_name, context_str, *options):
     for cnt, option in enumerate(options):
         option_dict['{}'.format(cnt + 1)] = option
         if not callable(option):
-            print(option_format_str.format(cnt + 1, option))
+            print(option_format_str.format(cnt + 1, u(str(option))))
         else:
             print(option_format_str.format(cnt + 1, option.__name__))
     choice = None
@@ -147,11 +149,11 @@ def SelectFieldPrompt(field_name, context_str, *options):
 
 
 def GetVcardContextString(vcard1, vcard2):
-    logger.debug('Input vCard 1:\n{}'.format(vcard1))
-    logger.debug('Input vCard 2:\n{}'.format(vcard2))
+    logger.debug('Input vCard 1:\n{}'.format(u(vcard1.serialize())))
+    logger.debug('Input vCard 2:\n{}'.format(u(vcard2.serialize())))
     context = 'Option 1:\n{}\n\nOption 2:\n{}\n\n'.format(
-        pprint.pformat(vcard1.contents),
-        pprint.pformat(vcard2.contents)
+        pprint.pformat(u(str(vcard1.contents))),
+        pprint.pformat(u(str(vcard2.contents)))
     )
     return context
 
@@ -176,12 +178,12 @@ def main(args):
 
     vcard1 = vobject.readOne(vcard1_raw)
     vcard2 = vobject.readOne(vcard2_raw)
-    logger.debug('First vCard:\n{}'.format(vcard1))
-    logger.debug('Second vCard:\n{}'.format(vcard2))
+    logger.debug('First vCard:\n{}'.format(u(vcard1.serialize())))
+    logger.debug('Second vCard:\n{}'.format(u(vcard2.serialize())))
 
     merged_vcard = MergeVcards(vcard1, vcard2)
-    logger.debug('Merged vCard:\n{}'.format(merged_vcard))
-    args.outfile.write(merged_vcard.serialize())
+    logger.debug('Merged vCard:\n{}'.format(u(merged_vcard.serialize())))
+    args.outfile.write(u(merged_vcard.serialize()))
 
 
 if __name__ == '__main__':

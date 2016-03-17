@@ -25,6 +25,7 @@ import re
 import sys
 
 import vobject
+from six import u
 
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ def IsFileSystemCompatString(input_str, encoding='latin-1'):
     """
     try:
         input_str.encode(encoding)
-    except UnicodeEncodeError:
+    except (UnicodeDecodeError, UnicodeEncodeError):
         return ''
     return input_str
 
@@ -141,8 +142,8 @@ def WriteVcard(filename, vcard, fopen=codecs.open):
         return False
     try:
         with fopen(filename, 'w', encoding='utf-8') as f:
-            logger.debug('{} -> {}'.format(filename, vcard))
-            f.write(vcard.serialize())
+            logger.debug('Writing {}:\n{}'.format(filename, u(vcard.serialize())))
+            f.write(u(vcard.serialize()))
     except OSError:
         logger.error('Error writing to file "{}", skipping.'.format(filename))
         return False
@@ -174,10 +175,10 @@ def main(args):
         try:
             fname = GetVcardFilename(vcard,
                                      filename_charset=args.filename_charset)
-            logger.debug('{:30}'.format(fname))
+            logger.debug('{}'.format(fname))
         except NameError as e:
-            logger.warning('SKIPPING: Could not create filename for {}'.format(
-                str(vcard))
+            logger.warning('SKIPPING: Could not create filename for:\n{}'.format(
+                u(vcard.serialize()))
             )
             continue
         new_files[fname].append(vcard)
@@ -185,7 +186,16 @@ def main(args):
     new_vcards = DedupVcardFilenames(new_files)
     if not args.pretend:
         for k, v in new_vcards.items():
-            WriteVcard(k, v[0])
+            vcard_path = k
+            if args.output_dir:
+                output_dir = os.path.abspath(args.output_dir[0])
+                if os.path.isdir(output_dir) and os.access(output_dir, os.W_OK):
+                    vcard_path = os.path.join(output_dir, k)
+                else:
+                    logger.warning('--output_dir may not be a directory!')
+                    logger.fatal('Cannot write to output directory.')
+                    sys.exit(1)
+            WriteVcard(vcard_path, v[0])
 
 
 if __name__ == '__main__':
