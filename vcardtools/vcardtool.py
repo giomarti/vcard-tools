@@ -10,14 +10,14 @@ import argparse
 import sys
 
 try:
-    import vcf_merge
-    import vcf_splitter
+    from . import vcf_merge
+    from . import vcf_splitter
 except ImportError:
     print(sys.path)
     raise
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(prog='vcardtool')
     sub_parsers = parser.add_subparsers(help='sub-command help')
 
@@ -30,4 +30,12 @@ if __name__ == '__main__':
     parser_split.set_defaults(func=vcf_splitter.main)
 
     args = parser.parse_args(sys.argv[1:])
-    args.func(args)
+    try:
+        args.func(args)
+    except AttributeError:
+        parser.print_usage()
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
