@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 
+import argparse
 import codecs
 import pprint
 import sys
@@ -95,20 +97,34 @@ def GetVcardContextString(vcard1, vcard2):
     return context
 
 
-def main(argv):
-    with codecs.open(argv[1], 'r', encoding='utf-8') as f:
+def AddArguments(parser):
+    parser.add_argument('vcard_files',
+                        nargs=2,
+                        help='Two vCard files to merge')
+    parser.add_argument('--outfile',
+                        nargs='?',
+                        type=argparse.FileType('w'),
+                        default=sys.stdout,
+                        help='Write merged vCard to file')
+
+
+def main(args):
+    with codecs.open(args.vcard_files[0], 'r', encoding='utf-8') as f:
         vcard1_raw = f.read()
 
-    with codecs.open(argv[2], 'r', encoding='utf-8') as f:
+    with codecs.open(args.vcard_files[1], 'r', encoding='utf-8') as f:
         vcard2_raw = f.read()
 
     vcard1 = vobject.readOne(vcard1_raw)
     vcard2 = vobject.readOne(vcard2_raw)
 
-    print(vcard1)
-    print(vcard2)
-    print(MergeVcards(vcard1, vcard2))
+    logger.debug(vcard1)
+    logger.debug(vcard2)
+    args.outfile.write(MergeVcards(vcard1, vcard2))
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    parser = argparse.ArgumentParser(prog='vcf_merge')
+    AddArguments(parser)
+    args = parser.parse_args(sys.argv[1:])
+    main(args)

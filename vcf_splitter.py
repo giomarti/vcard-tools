@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 
 Other desireable things:
@@ -9,6 +11,7 @@ Other desireable things:
 
 
 """
+import argparse
 import codecs
 import collections
 import logging
@@ -82,21 +85,20 @@ def CleanString(s):
     return '_'.join(pieces)
 
 
-def GetEmailUsername(email_addr, cleaner=CleanString):
+def GetEmailUsername(email_addr):
     login = email_addr.split('@')[0]
-    return cleaner(login)
+    return CleanString(login)
 
 
-def LikelyName(vcard, cleaner=CleanString):
+def GetVcardFilename(vcard, filename_charset='latin-1'):
     fname_pieces = []
     for name in ('family', 'given', 'additional'):
         val = getattr(vcard.n.value, name)
-        if val and IsFileSystemCompatString(val):
-            fname_pieces.append(cleaner(val.lower()))
+        if val and IsFileSystemCompatString(val, encoding=filename_charset):
+            fname_pieces.append(CleanString(val.lower()))
     
     if not fname_pieces and 'email' in vcard.contents:
-        fname_pieces.append(GetEmailUsername(vcard.email.value,
-                                             cleaner=cleaner))
+        fname_pieces.append(GetEmailUsername(vcard.email.value))
 
     if not fname_pieces:
         raise NameError('{} HAS NO POSSIBLE FILENAME!'.format(str(vcard)))
@@ -142,54 +144,47 @@ def WriteVcard(filename, vcard, fopen=codecs.open):
     return True
 
 
-def MergeVcards(vcard1, vcard2):
-    new_vcard = vobject.vCard()
-    vcard1_fields = set(vcard1.contents.keys())
-    vcard2_fields = set(vcard2.contents.keys())
-    mutual_fields = vcard1_fields.intersection(vcard2_fields)
-    for field in mutual_fields:
-        val1 = getattr(vcard1, field).value
-        val2 = getattr(vcard2, field).value
-        if val1 != val2:
-            # we have a conflict, if a list maybe append otherwise prompt user
-        else:
-            new_val = val1
-        new_field = new_vcard.add(field) 
-        new_field.value = new_val
-
-    for field in vcard1_fields.difference(vcard2_fields):
-        val = getattr(vcard1, field).value
-        new_field = new_vcard.add(field)
-        new_field.value = val
-
-    for field in vcard2_fields.difference(vcard1_fields):
-        val = getattr(vcard2, field).value
-        new_field = new_vcard.add(field)
-        new_field.value = val
-
-    return new_vcard
+def AddArguments(parser):
+    parser.add_argument('vcard_file',
+                        nargs=1,
+                        help='A multi-entry vCard to split.')
+    parser.add_argument('--pretend',
+                        action='store_true',
+                        help='Print summary but do not write files')
+    parser.add_argument('--filename_charset',
+                        choices=['utf-8', 'latin-1'],
+                        default='latin-1',
+                        help='Restrict filenames to character set')
+    parser.add_argument('--output_dir',
+                        nargs=1,
+                        help='Write output files in provided directory')
 
 
-def main(argv):
-    with codecs.open(argv[1], 'r', encoding='utf-8') as f:
+def main(args):
+    with codecs.open(args.vcard_file[0], 'r', encoding='utf-8') as f:
         content = f.read()
 
     new_files = collections.defaultdict(list)
     for vcard in GetVcardsFromString(content):
         try:
-            fname = LikelyName(vcard)
+            fname = GetVcardFilename(vcard,
+                                     filename_charset=args.filename_charset)
             logger.debug('{:30}'.format(fname))
         except NameError as e:
-            logger.warning('SKIPPING: Could not determine name for {}'.format(
+            logger.warning('SKIPPING: Could not create filename for {}'.format(
                 str(vcard))
             )
             continue
         new_files[fname].append(vcard)
 
     new_vcards = DedupVcardFilenames(new_files)
-    for k, v in new_vcards.items():
-        WriteVcard(k, v[0])
+    if not args.pretend:
+        for k, v in new_vcards.items():
+            WriteVcard(k, v[0])
 
 
 if __name__ == '__main__':
-    main(sys.argv) 
+    parser = argparse.ArgumentParser(prog='vcf_splitter')
+    AddArguments(parser)
+    args = parser.parse_args(sys.argv[1:])
+    main(args)
