@@ -14,7 +14,7 @@ with codecs.open(path.join(current_dir, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='vcardtools',
-    version='0.1.0',
+    version='0.1.2',
     description='Tools to split and merge vCard files.',
     long_description=long_description,
     url='https://github.com/dmwilcox/vcard-tools',
@@ -42,6 +42,7 @@ setup(
             'vcardtool = vcardtools.vcardtool:main',
             'vcf_merge = vcardtools.vcf_merge:dispatch_main',
             'vcf_splitter = vcardtools.vcf_splitter:dispatch_main',
+            'vcf_lister = vcardtools.vcf_lister:dispatch_main',
         ],
     },
     install_requires = ['argparse', 'six', 'vobject']

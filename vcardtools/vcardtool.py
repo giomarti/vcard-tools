@@ -12,6 +12,7 @@ import sys
 try:
     from . import vcf_merge
     from . import vcf_splitter
+    from . import vcf_lister
 except ImportError:
     print(sys.path)
     raise
@@ -28,6 +29,10 @@ def main():
     parser_split = sub_parsers.add_parser('split', help='split help')
     vcf_splitter.AddArguments(parser_split)
     parser_split.set_defaults(func=vcf_splitter.main)
+
+    parser_list = sub_parsers.add_parser('list', help='list help')
+    vcf_lister.AddArguments(parser_list)
+    parser_list.set_defaults(func=vcf_lister.main)
 
     args = parser.parse_args(sys.argv[1:])
     try:
